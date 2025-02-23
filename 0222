@@ -1,0 +1,48 @@
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Button, Text } from 'react-native';
+import { firebase } from '../firebaseConfig';
+
+const Profile = ({ navigation }) => {
+  const [username, setUsername] = useState('');
+  const [sport, setSport] = useState('');
+  const [pr, setPr] = useState('');
+  const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = firebase.auth().onAuthStateChanged(setUser);
+    return unsubscribe;
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!username || !sport || !pr) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      await firebase.firestore().collection('athletes').doc(user.uid).set({
+        username,
+        sport,
+        personalRecord: pr,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      alert('Profile created and PR uploaded!');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <View>
+      <Text>{`Welcome, ${user?.email}`}</Text>
+      <TextInput placeholder="Username" value={username} onChangeText={setUsername} />
+      <TextInput placeholder="Sport" value={sport} onChangeText={setSport} />
+      <TextInput placeholder="Personal Record" value={pr} onChangeText={setPr} />
+      {error ? <Text>{error}</Text> : null}
+      <Button title="Save Profile" onPress={handleSubmit} />
+    </View>
+  );
+};
+
+export default Profile;
